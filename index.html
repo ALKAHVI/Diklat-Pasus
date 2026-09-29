@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Interaktif Diklat PASUS SMANSA</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts Inter & Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pasus: {
+                            red: '#991b1b',
+                            brightRed: '#dc2626',
+                            gold: '#d97706',
+                            goldLight: '#f59e0b',
+                            dark: '#0f172a',
+                            slate: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Montserrat', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        .glow-red {
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.35);
+        }
+        .glow-gold {
+            box-shadow: 0 0 20px rgba(217, 119, 6, 0.35);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased overflow-x-hidden selection:bg-pasus-brightRed selection:text-white">
+
+    <!-- Top Header & Global Timer Bar -->
+    <header class="bg-slate-950 border-b border-slate-800 sticky top-0 z-50 shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-pasus-brightRed to-pasus-red flex items-center justify-center font-heading font-black text-amber-300 text-xl border border-amber-500/30 shadow-lg">
+                    P
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-heading font-extrabold text-lg sm:text-xl tracking-tight text-white">PASUS SMANSA</h1>
+                        <span class="bg-pasus-red/40 text-red-300 text-xs font-semibold px-2 py-0.5 rounded border border-red-500/30">Materi 60 Mnt</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Pembentukan Karakter, Etika & Motivasi</p>
+                </div>
+            </div>
+
+            <!-- Master Session Timer Widget -->
+            <div class="flex items-center bg-slate-900 border border-slate-700/80 rounded-xl px-4 py-2 gap-4 shadow-inner">
+                <div class="text-right">
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 block font-semibold">Total Sisa Waktu</span>
+                    <span id="masterTimerDisplay" class="font-mono text-xl sm:text-2xl font-bold text-amber-400">60:00</span>
+                </div>
+                <div class="flex items-center gap-1.5 border-l border-slate-700 pl-3">
+                    <button id="startTimerBtn" onclick="toggleMasterTimer()" class="p-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md active:scale-95" title="Mulai / Pause">
+                        <i data-lucide="play" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="resetMasterTimer()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all active:scale-95" title="Reset Waktu">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row gap-6">
+
+        <!-- Sidebar Timeline Step Navigation -->
+        <aside class="w-full md:w-72 shrink-0">
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 sticky top-24 backdrop-blur-md">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 px-2">Modul Pelatihan</h2>
+                <nav class="space-y-2" id="timelineNav">
+                    <!-- Nav Items will be generated via JS -->
+                </nav>
+
+                <!-- Quick Sound Effect Soundboard -->
+                <div class="mt-6 pt-4 border-t border-slate-700/60">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2 px-2 flex items-center gap-1.5">
+                        <i data-lucide="volume-2" class="w-3.5 h-3.5 text-amber-400"></i> SFX Pemateri
+                    </span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="playAudioTone('whistle')" class="text-xs font-semibold py-2 px-2.5 bg-slate-900/80 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg flex items-center justify-center gap-1.5 transition-all">
+                            📣 Peluit
+                        </button>
+                        <button onclick="playAudioTone('beep')" class="text-xs font-semibold py-2 px-2.5 bg-slate-900/80 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg flex items-center justify-center gap-1.5 transition-all">
+                            ⏱️ Bel Waktu
+                        </button>
+                        <button onclick="playAudioTone('success')" class="text-xs font-semibold py-2 px-2.5 bg-slate-900/80 hover:bg-slate-700 text-emerald-300 border border-slate-700 rounded-lg flex items-center justify-center gap-1.5 transition-all col-span-2">
+                            👏 Tepuk Apresiasi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Dynamic Content Section -->
+        <div class="flex-1 min-w-0">
+            <!-- SECTION 1: Ice Breaking -->
+            <section id="section-1" class="tab-content space-y-6">
+                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/80 pb-4 mb-6">
+                        <div>
+                            <span class="text-xs font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">SESI 1 • 10 MENIT</span>
+                            <h2 class="text-2xl font-heading font-bold text-white mt-2">Pembukaan & Ice Breaking: "Fokus PASUS"</h2>
+                            <p class="text-slate-300 text-sm mt-1">Tujuan: Memecah kebekuan, melatih respons instingtif, dan menyatukan frekuensi instruksi.</p>
+                        </div>
+                    </div>
+
+                    <!-- Ice Breaking Interactive Drill Machine -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-6 text-center relative overflow-hidden">
+                        <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                        <span class="text-xs font-bold text-slate-400 tracking-wider uppercase block mb-2">Simulator Perintah Acak Pemateri</span>
+                        
+                        <!-- Command Visual Display Box -->
+                        <div id="commandDisplay" class="min-h-[140px] flex flex-col items-center justify-center bg-slate-900 border-2 border-dashed border-slate-700 rounded-2xl p-6 my-4 transition-all duration-300">
+                            <span class="text-slate-500 text-sm font-medium">Klik tombol "Beri Komando Acak" untuk mulai instruksi</span>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="flex flex-wrap items-center justify-center gap-3">
+                            <button onclick="generateRandomCommand()" class="px-6 py-3 bg-gradient-to-r from-pasus-brightRed to-pasus-red hover:from-red-600 hover:to-red-800 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2">
+                                <i data-lucide="zap" class="w-5 h-5 text-amber-300"></i>
+                                Beri Komando Acak
+                            </button>
+                            <button onclick="startAutoDrill()" id="autoDrillBtn" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl border border-slate-700 transition-all flex items-center gap-2">
+                                <i data-lucide="play-circle" class="w-5 h-5 text-emerald-400"></i>
+                                Mode Otomatis
+                            </button>
+                        </div>
+
+                        <!-- Rule reference table -->
+                        <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
+                            <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-lg">
+                                <span class="text-xs text-red-400 font-bold block mb-1">📢 Command: "PASUS"</span>
+                                <p class="text-xs text-slate-300">Tepuk tangan <b>1 kali</b> secara presisi.</p>
+                            </div>
+                            <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-lg">
+                                <span class="text-xs text-amber-400 font-bold block mb-1">📢 Command: "SMANSA"</span>
+                                <p class="text-xs text-slate-300">Tepuk tangan <b>2 kali</b> cepat.</p>
+                            </div>
+                            <div class="bg-slate-900/90 border border-slate-800 p-3 rounded-lg">
+                                <span class="text-xs text-emerald-400 font-bold block mb-1">📢 Command: "JAYA"</span>
+                                <p class="text-xs text-slate-300">Hentak kaki kanan <b>1 kali</b> + Teriak "HA!".</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Briefing Notes for Facilitator -->
+                    <div class="bg-slate-900/60 rounded-xl p-4 border border-slate-800 space-y-2 text-sm text-slate-300">
+                        <h4 class="font-bold text-amber-400 flex items-center gap-2">
+                            <i data-lucide="compass" class="w-4 h-4"></i> Catatan Evaluasi Pemateri (Debrief):
+                        </h4>
+                        <ul class="list-disc list-inside space-y-1 text-xs sm:text-sm text-slate-300">
+                            <li>Perhatikan peserta yang lambat merespons atau ragu-ragu. Tegaskan bahwa ketelitian dan kecepatan merespons adalah karakter utama anggota PASUS.</li>
+                            <li>Tingkatkan tempo perintah secara bertahap untuk menguji tingkat fokus bawah sadar.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: Karakter & Etika -->
+            <section id="section-2" class="tab-content hidden space-y-6">
+                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/80 pb-4 mb-6">
+                        <div>
+                            <span class="text-xs font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">SESI 2 • 15 MENIT</span>
+                            <h2 class="text-2xl font-heading font-bold text-white mt-2">Karakter & Etika Sang Terpilih</h2>
+                            <p class="text-slate-300 text-sm mt-1">Internalisasi nilai dasar: Disiplin, Tanggung Jawab, Integritas & Hormat.</p>
+                        </div>
+                    </div>
+
+                    <!-- Pillar Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-gradient-to-b from-slate-900 to-slate-950 p-5 rounded-xl border border-red-500/30 hover:border-red-500 transition-all">
+                            <div class="w-10 h-10 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center mb-3">
+                                <i data-lucide="shield-check" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-bold text-white text-base">1. Disiplin Diri</h3>
+                            <p class="text-xs text-slate-400 mt-2">Bukan karena diawasi senior atau guru, tetapi kebiasaan sadar untuk konsisten pada aturan dan ketepatan waktu.</p>
+                        </div>
+
+                        <div class="bg-gradient-to-b from-slate-900 to-slate-950 p-5 rounded-xl border border-amber-500/30 hover:border-amber-500 transition-all">
+                            <div class="w-10 h-10 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center mb-3">
+                                <i data-lucide="award" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-bold text-white text-base">2. Tanggung Jawab</h3>
+                            <p class="text-xs text-slate-400 mt-2">Setiap tindakan membawa nama baik PASUS SMANSA. Berani mengakui kesalahan dan sigap memperbaiki.</p>
+                        </div>
+
+                        <div class="bg-gradient-to-b from-slate-900 to-slate-950 p-5 rounded-xl border border-emerald-500/30 hover:border-emerald-500 transition-all">
+                            <div class="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3">
+                                <i data-lucide="heart-handshake" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-bold text-white text-base">3. Etika & Hormat</h3>
+                            <p class="text-xs text-slate-400 mt-2">Hormat kepada guru, pelatih, senior, dan santun kepada teman sejawat. Etika di atas kepintaran.</p>
+                        </div>
+                    </div>
+
+                    <!-- Mini Practical Interactive Roleplay Tester: Cermin Etika -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg text-amber-300 flex items-center gap-2">
+                                <i data-lucide="user-check" class="w-5 h-5"></i> Mini Praktik (5 Min): "Cermin Etika"
+                            </h3>
+                            <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded">Studi Kasus Interaktif</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mb-4">Pilih skenario berikut dan tentukan tindakan etika yang paling tepat bagi seorang anggota PASUS:</p>
+
+                        <div id="ethicsScenarioBox" class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-4">
+                            <!-- Scenario Content Dynamic via JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: Motivasi (Menemukan WHY) -->
+            <section id="section-3" class="tab-content hidden space-y-6">
+                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/80 pb-4 mb-6">
+                        <div>
+                            <span class="text-xs font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">SESI 3 • 15 MENIT</span>
+                            <h2 class="text-2xl font-heading font-bold text-white mt-2">Motivasi: Menemukan "WHY" Kalian</h2>
+                            <p class="text-slate-300 text-sm mt-1">Mengubah tekanan fisik/mental menjadi pemantik pertumbuhan diri.</p>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Motivation Card Builder -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Input Form -->
+                        <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+                            <h3 class="font-bold text-white text-base flex items-center gap-2">
+                                <i data-lucide="edit-3" class="w-4 h-4 text-amber-400"></i> Buat Kartu Komitmen "WHY"
+                            </h3>
+                            <p class="text-xs text-slate-400">Instruksikan peserta mengisi poin motivasi pribadi mereka:</p>
+                            
+                            <div>
+                                <label class="text-xs text-slate-300 font-semibold block mb-1">Nama Anggota PASUS</label>
+                                <input type="text" id="traineeName" placeholder="Contoh: Budi Santoso" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-slate-300 font-semibold block mb-1">Alasan Utama (Alasan "WHY" Terkuat)</label>
+                                <select id="traineeWhySelect" onchange="toggleCustomWhyInput()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                                    <option value="Ingin melatih disiplin dan mental baja untuk masa depan">Melatih disiplin dan mental baja untuk masa depan</option>
+                                    <option value="Ingin membanggakan orang tua dan sekolah SMANSA">Membanggakan orang tua & sekolah SMANSA</option>
+                                    <option value="Persiapan masuk Akademi Militer / Kepolisian / Kedinasan">Persiapan masuk Akmil/Akpol/Kedinasan</option>
+                                    <option value="custom">-- Tuliskan Alasan Sendiri --</option>
+                                </select>
+                                <input type="text" id="traineeCustomWhy" placeholder="Tuliskan motivasi terdalammu..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 mt-2 hidden">
+                            </div>
+
+                            <div>
+                                <label class="text-xs text-slate-300 font-semibold block mb-1">Slogan Penguat Saat Lelah</label>
+                                <input type="text" id="traineeMotto" value="Keringat di medan latihan menghemat darah di medan pertempuran!" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                            </div>
+
+                            <button onclick="updateMotivationCard()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-lg transition-all text-sm shadow-md">
+                                Generate Kartu Motivasi
+                            </button>
+                        </div>
+
+                        <!-- Card Preview -->
+                        <div class="flex flex-col items-center justify-center">
+                            <div id="motivationBadge" class="w-full bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 border-2 border-amber-500/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden text-center glow-gold">
+                                <div class="absolute top-2 right-2 opacity-10">
+                                    <i data-lucide="shield" class="w-32 h-32 text-amber-400"></i>
+                                </div>
+                                <span class="text-[10px] tracking-widest text-amber-400 uppercase font-bold block mb-1">KARTU KOMITMEN PASUS SMANSA</span>
+                                <h4 id="cardNameDisplay" class="text-xl font-heading font-extrabold text-white">BUDI SANTOSO</h4>
+                                <div class="my-4 py-3 px-4 bg-slate-900/80 rounded-xl border border-amber-500/30">
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">MENGAPA SAYA BERADA DI SINI? (MY WHY)</span>
+                                    <p id="cardWhyDisplay" class="text-sm font-semibold text-amber-200 italic">"Melatih disiplin dan mental baja untuk masa depan"</p>
+                                </div>
+                                <p id="cardMottoDisplay" class="text-xs text-slate-300 font-medium">"Keringat di medan latihan menghemat darah di medan pertempuran!"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: Game Jalur Ranjau Buta -->
+            <section id="section-4" class="tab-content hidden space-y-6">
+                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/80 pb-4 mb-6">
+                        <div>
+                            <span class="text-xs font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">SESI 4 • 15 MENIT</span>
+                            <h2 class="text-2xl font-heading font-bold text-white mt-2">Game Simulasi: "Jalur Ranjau Buta"</h2>
+                            <p class="text-slate-300 text-sm mt-1">Uji Rantai Komando, Kepercayaan Pasukan, dan Komunikasi Efektif.</p>
+                        </div>
+                    </div>
+
+                    <!-- Simulator Control Board -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Game Dashboard -->
+                        <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+                            <h3 class="font-bold text-white text-base flex items-center gap-2">
+                                <i data-lucide="flag" class="w-4 h-4 text-red-500"></i> Kontrol Simulator Kelompok
+                            </h3>
+
+                            <div>
+                                <label class="text-xs text-slate-300 font-semibold block mb-1">Pilih Peleton / Kelompok</label>
+                                <select id="gamePeletonSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+                                    <option>Peleton 1 (Alpha)</option>
+                                    <option>Peleton 2 (Bravo)</option>
+                                    <option>Peleton 3 (Charlie)</option>
+                                </select>
+                            </div>
+
+                            <!-- Game Timer -->
+                            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
+                                <span class="text-xs text-slate-400 block mb-1">Waktu Tempuh Kelompok</span>
+                                <span id="gameTimerDisplay" class="font-mono text-3xl font-bold text-emerald-400">00:00</span>
+                                <div class="flex justify-center gap-2 mt-3">
+                                    <button onclick="toggleGameTimer()" id="gameTimerBtn" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg">Mulai</button>
+                                    <button onclick="resetGameTimer()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg">Reset</button>
+                                </div>
+                            </div>
+
+                            <!-- Penalty Score -->
+                            <div class="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800">
+                                <div>
+                                    <span class="text-xs font-semibold text-slate-300 block">Kena Ranjau (+5d/penalti)</span>
+                                    <span id="penaltyCount" class="text-lg font-bold text-red-400">0 Kali</span>
+                                </div>
+                                <button onclick="addPenalty()" class="px-3 py-1.5 bg-red-600/80 hover:bg-red-600 text-white text-xs font-bold rounded-lg flex items-center gap-1">
+                                    <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> + Penalti
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tactical Grid Map -->
+                        <div class="lg:col-span-2 bg-slate-950 p-5 rounded-xl border border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Peta Visual Denah Lapangan (Klik Kotak Untuk Pasang Ranjau)</h4>
+                                    <button onclick="resetMineGrid()" class="text-xs text-amber-400 hover:underline">Reset Denah</button>
+                                </div>
+
+                                <!-- Grid layout -->
+                                <div id="minefieldGrid" class="grid grid-cols-6 gap-2 my-2">
+                                    <!-- 6x4 Grid generated via JS -->
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                                <span><span class="inline-block w-3 h-3 bg-slate-800 border border-slate-700 rounded mr-1"></span> Jalur Aman</span>
+                                <span><span class="inline-block w-3 h-3 bg-red-600 rounded mr-1"></span> Benda Ranjau</span>
+                                <span><span class="inline-block w-3 h-3 bg-amber-500 rounded mr-1"></span> Posisi Pasukan</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Debriefing Guide -->
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <h4 class="font-bold text-amber-400 text-sm flex items-center gap-2">
+                            <i data-lucide="message-square" class="w-4 h-4"></i> Pertanyaan Kunci Untuk Evaluasi (Debriefing):
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-300 pt-2">
+                            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                                <b>1. Bagi Komandan:</b> Seberapa sulit menyampaikan instruksi yang jelas saat bawahan tidak bisa melihat kondisi?
+                            </div>
+                            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                                <b>2. Bagi Prajurit Mata Tertutup:</b> Apakah kalian menaruh rasa percaya penuh 100% pada kepemimpinan komandan?
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: Penutup & Janji PASUS -->
+            <section id="section-5" class="tab-content hidden space-y-6">
+                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl text-center space-y-6">
+                    <div>
+                        <span class="text-xs font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">SESI 5 • 5 MENIT</span>
+                        <h2 class="text-3xl font-heading font-black text-white mt-3">Penutup & Pengukuhan Komitmen</h2>
+                        <p class="text-slate-300 text-sm mt-1">Ajak seluruh peserta berdiri tegap dan mengumandangkan Ikrar PASUS.</p>
+                    </div>
+
+                    <!-- Big Oath Box -->
+                    <div class="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-2 border-amber-500/60 rounded-2xl p-8 max-w-2xl mx-auto shadow-2xl relative glow-red">
+                        <i data-lucide="quote" class="w-12 h-12 text-amber-500/20 absolute top-4 left-4"></i>
+                        <h3 class="text-xs font-bold text-amber-400 uppercase tracking-widest mb-4">JANJI KOMITMEN ANGGOTA PASUS SMANSA</h3>
+                        
+                        <p class="text-xl sm:text-2xl font-heading font-extrabold text-white leading-relaxed italic my-6">
+                            "Saya siap dibentuk!<br>
+                            Saya siap menjadi teladan!<br>
+                            <span class="text-amber-400 font-black text-2xl sm:text-3xl block mt-2">PASUS SMANSA, JAYA!"</span>
+                        </p>
+
+                        <button onclick="triggerPledgeCelebration()" class="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-pasus-goldLight text-slate-950 font-black text-base rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 mx-auto">
+                            <i data-lucide="sparkles" class="w-5 h-5"></i>
+                            KUMANDANGKAN IKRAR & SELEBRASI
+                        </button>
+                    </div>
+
+                    <!-- Summary Card -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto text-left pt-4">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <span class="text-amber-400 font-bold block text-xs uppercase">1. Karakter</span>
+                            <p class="text-xs text-slate-400 mt-1">Fondasi utama disiplin dan ketangguhan mental.</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <span class="text-amber-400 font-bold block text-xs uppercase">2. Etika</span>
+                            <p class="text-xs text-slate-400 mt-1">Perhiasan dan cermin utama anggota PASUS.</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                            <span class="text-amber-400 font-bold block text-xs uppercase">3. Motivasi</span>
+                            <p class="text-xs text-slate-400 mt-1">Bahan bakar internal untuk pantang menyerah.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <script>
+        // Global App State
+        let currentTab = 1;
+        let masterTimeLeft = 60 * 60; // 60 minutes in seconds
+        let masterTimerInterval = null;
+        let isMasterTimerRunning = false;
+
+        // Sound Synthesis using Web Audio API (No external sound file dependency)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playAudioTone(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'whistle') {
+                // High pitch whistle sound
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(2200, now);
+                osc.frequency.exponentialRampToValueAtTime(1800, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'beep') {
+                // Timer beep
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'success') {
+                // Success chime
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            }
+        }
+
+        // Timeline Data Definition
+        const timelineSteps = [
+            { id: 1, title: 'Pembukaan & Ice Breaking', duration: '10 Min', icon: 'zap' },
+            { id: 2, title: 'Karakter & Etika', duration: '15 Min', icon: 'shield-check' },
+            { id: 3, title: 'Motivasi & "WHY"', duration: '15 Min', icon: 'compass' },
+            { id: 4, title: 'Game Jalur Ranjau', duration: '15 Min', icon: 'flag' },
+            { id: 5, title: 'Penutup & Janji PASUS', duration: '5 Min', icon: 'award' }
+        ];
+
+        function renderTimelineNav() {
+            const container = document.getElementById('timelineNav');
+            container.innerHTML = '';
+
+            timelineSteps.forEach(step => {
+                const isActive = step.id === currentTab;
+                const button = document.createElement('button');
+                button.onclick = () => switchTab(step.id);
+                button.className = `w-full text-left p-3 rounded-xl transition-all flex items-center justify-between gap-3 ${
+                    isActive 
+                    ? 'bg-gradient-to-r from-pasus-brightRed to-pasus-red text-white font-bold shadow-md' 
+                    : 'bg-slate-900/50 hover:bg-slate-700/50 text-slate-300 font-medium border border-slate-800'
+                }`;
+
+                button.innerHTML = `
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <i data-lucide="${step.icon}" class="w-4 h-4 shrink-0 ${isActive ? 'text-amber-300' : 'text-slate-400'}"></i>
+                        <span class="text-xs truncate">${step.title}</span>
+                    </div>
+                    <span class="text-[10px] px-2 py-0.5 rounded ${isActive ? 'bg-black/30 text-amber-200' : 'bg-slate-800 text-slate-400'} shrink-0 font-mono">
+                        ${step.duration}
+                    </span>
+                `;
+                container.appendChild(button);
+            });
+            lucide.createIcons();
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`section-${tabId}`).classList.remove('hidden');
+            renderTimelineNav();
+        }
+
+        // Master Timer Functions
+        function toggleMasterTimer() {
+            const btn = document.getElementById('startTimerBtn');
+            if (isMasterTimerRunning) {
+                clearInterval(masterTimerInterval);
+                isMasterTimerRunning = false;
+                btn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i>`;
+                btn.className = "p-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md active:scale-95";
+            } else {
+                isMasterTimerRunning = true;
+                btn.innerHTML = `<i data-lucide="pause" class="w-4 h-4"></i>`;
+                btn.className = "p-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-all shadow-md active:scale-95";
+                masterTimerInterval = setInterval(() => {
+                    if (masterTimeLeft > 0) {
+                        masterTimeLeft--;
+                        updateMasterDisplay();
+                    } else {
+                        clearInterval(masterTimerInterval);
+                        isMasterTimerRunning = false;
+                        playAudioTone('beep');
+                    }
+                }, 1000);
+            }
+            lucide.createIcons();
+        }
+
+        function resetMasterTimer() {
+            clearInterval(masterTimerInterval);
+            isMasterTimerRunning = false;
+            masterTimeLeft = 60 * 60;
+            updateMasterDisplay();
+            const btn = document.getElementById('startTimerBtn');
+            btn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i>`;
+            btn.className = "p-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md active:scale-95";
+            lucide.createIcons();
+        }
+
+        function updateMasterDisplay() {
+            const mins = Math.floor(masterTimeLeft / 60);
+            const secs = masterTimeLeft % 60;
+            document.getElementById('masterTimerDisplay').textContent = 
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        const commands = [
+            { text: "PASUS", action: "👏 Tepuk 1x", color: "text-red-400" },
+            { text: "SMANSA", action: "👏👏 Tepuk 2x", color: "text-amber-400" },
+            { text: "JAYA", action: "💥 Hentak Kaki + Teriak 'HA!'", color: "text-emerald-400" },
+            { text: "PASUS - SMANSA!", action: "👏 + 👏👏 Tepuk 3x Combo", color: "text-purple-400" },
+            { text: "PASUS - JAYA!", action: "👏 Tepuk 1x + 💥 Hentak 'HA!'", color: "text-sky-400" }
+        ];
+
+        let autoDrillInterval = null;
+        let isAutoDrillRunning = false;
+
+        function generateRandomCommand() {
+            playAudioTone('beep');
+            const displayBox = document.getElementById('commandDisplay');
+            const item = commands[Math.floor(Math.random() * commands.length)];
+            
+            displayBox.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                displayBox.innerHTML = `
+                    <span class="text-3xl sm:text-4xl font-heading font-black tracking-wider ${item.color} mb-2">${item.text}</span>
+                    <span class="text-sm font-semibold text-slate-300 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">${item.action}</span>
+                `;
+                displayBox.style.transform = 'scale(1)';
+            }, 100);
+        }
+
+        function startAutoDrill() {
+            const btn = document.getElementById('autoDrillBtn');
+            if (isAutoDrillRunning) {
+                clearInterval(autoDrillInterval);
+                isAutoDrillRunning = false;
+                btn.innerHTML = `<i data-lucide="play-circle" class="w-5 h-5 text-emerald-400"></i> Mode Otomatis`;
+                btn.classList.remove('bg-amber-600', 'text-white');
+            } else {
+                isAutoDrillRunning = true;
+                btn.innerHTML = `<i data-lucide="pause-circle" class="w-5 h-5 text-white"></i> Hentikan Auto`;
+                btn.classList.add('bg-amber-600', 'text-white');
+                generateRandomCommand();
+                autoDrillInterval = setInterval(generateRandomCommand, 2500);
+            }
+            lucide.createIcons();
+        }
+
+        const ethicsScenarios = [
+            {
+                title: "Skenario 1: Menegur Senior/Siswa Lain yang Mengabaikan Aturan",
+                desc: "Kamu melihat seorang kawan seangkatan tidak menggunakan atribut seragam secara rapi saat memasuki lingkungan sekolah.",
+                options: [
+                    { text: "A. Membiarkan saja karena tidak ingin merusak pertemanan.", correct: false, feedback: "Kurang tepat. Menjadi anggota PASUS berarti berani saling mengingatkan demi kebaikan bersama." },
+                    { text: "B. Membentak dan menegur secara kasar di hadapan umum.", correct: false, feedback: "Salah. Ketegasan harus disampaikan dengan etika dan hormat, bukan dengan kesombongan." },
+                    { text: "C. Mengingatkan secara langsung dengan sopan dan lugas secara personal.", correct: true, feedback: "SANGAT TEPAT! Integritas dan kepedulian diimbangi dengan etika kesantunan yang baik." }
+                ]
+            },
+            {
+                title: "Skenario 2: Menyapa Guru & Pembina Sekolah",
+                desc: "Saat berjalan di koridor sekolah, kamu berpapasan dengan guru dari kejauhan.",
+                options: [
+                    { text: "A. Mengambil sikap sempurna, melakukan salam/penghormatan khas PASUS dan menyapa ramah.", correct: true, feedback: "SEMPURNA! Anggota PASUS adalah cermin teladan kesopanan di sekolah." },
+                    { text: "B. Pura-pura melihat HP agar tidak perlu menyapa.", correct: false, feedback: "Salah. Menghindari tegur sapa menunjukkan ketidaksiapan etika kepemimpinan." }
+                ]
+            }
+        ];
+
+        let currentScenarioIndex = 0;
+
+        function renderEthicsScenario() {
+            const scenario = ethicsScenarios[currentScenarioIndex];
+            const container = document.getElementById('ethicsScenarioBox');
+
+            let optionsHTML = scenario.options.map((opt, idx) => `
+                <button onclick="checkEthicsAnswer(${idx})" class="w-full text-left p-3 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700/80 text-xs sm:text-sm text-slate-200 transition-all font-medium">
+                    ${opt.text}
+                </button>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-amber-400">SKENARIO ${currentScenarioIndex + 1} DARI ${ethicsScenarios.length}</span>
+                    <button onclick="nextEthicsScenario()" class="text-xs text-slate-400 hover:text-white underline">Skenario Lain ➔</button>
+                </div>
+                <h4 class="font-bold text-white text-sm sm:text-base">${scenario.title}</h4>
+                <p class="text-xs text-slate-300">${scenario.desc}</p>
+                <div class="space-y-2 pt-2">${optionsHTML}</div>
+                <div id="ethicsFeedback" class="hidden p-3 rounded-lg text-xs font-semibold"></div>
+            `;
+        }
+
+        function checkEthicsAnswer(index) {
+            const scenario = ethicsScenarios[currentScenarioIndex];
+            const opt = scenario.options[index];
+            const feedbackEl = document.getElementById('ethicsFeedback');
+
+            feedbackEl.classList.remove('hidden', 'bg-emerald-950', 'text-emerald-300', 'border-emerald-800', 'bg-red-950', 'text-red-300', 'border-red-800');
+            
+            if (opt.correct) {
+                playAudioTone('success');
+                feedbackEl.classList.add('bg-emerald-950', 'text-emerald-300', 'border', 'border-emerald-800');
+            } else {
+                playAudioTone('beep');
+                feedbackEl.classList.add('bg-red-950', 'text-red-300', 'border', 'border-red-800');
+            }
+
+            feedbackEl.innerHTML = `💬 <b>Evaluasi:</b> ${opt.feedback}`;
+        }
+
+        function nextEthicsScenario() {
+            currentScenarioIndex = (currentScenarioIndex + 1) % ethicsScenarios.length;
+            renderEthicsScenario();
+        }
+
+        function toggleCustomWhyInput() {
+            const select = document.getElementById('traineeWhySelect');
+            const customInput = document.getElementById('traineeCustomWhy');
+            if (select.value === 'custom') {
+                customInput.classList.remove('hidden');
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
+        function updateMotivationCard() {
+            const name = document.getElementById('traineeName').value || "BUDI SANTOSO";
+            const whySelect = document.getElementById('traineeWhySelect').value;
+            const customWhy = document.getElementById('traineeCustomWhy').value;
+            const motto = document.getElementById('traineeMotto').value || "Keringat di medan latihan menghemat darah di medan pertempuran!";
+
+            const finalWhy = (whySelect === 'custom') ? (customWhy || "Menjadi pribadi yang lebih tangguh") : whySelect;
+
+            document.getElementById('cardNameDisplay').textContent = name.toUpperCase();
+            document.getElementById('cardWhyDisplay').textContent = `"${finalWhy}"`;
+            document.getElementById('cardMottoDisplay').textContent = `"${motto}"`;
+
+            playAudioTone('success');
+        }
+
+        let gameTimeLeft = 0;
+        let gameTimerInterval = null;
+        let isGameTimerRunning = false;
+        let penaltyScore = 0;
+
+        function toggleGameTimer() {
+            const btn = document.getElementById('gameTimerBtn');
+            if (isGameTimerRunning) {
+                clearInterval(gameTimerInterval);
+                isGameTimerRunning = false;
+                btn.textContent = "Lanjut";
+                btn.className = "px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg";
+            } else {
+                isGameTimerRunning = true;
+                btn.textContent = "Pause";
+                btn.className = "px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg";
+                gameTimerInterval = setInterval(() => {
+                    gameTimeLeft++;
+                    updateGameTimerDisplay();
+                }, 1000);
+            }
+        }
+
+        function resetGameTimer() {
+            clearInterval(gameTimerInterval);
+            isGameTimerRunning = false;
+            gameTimeLeft = 0;
+            penaltyScore = 0;
+            updateGameTimerDisplay();
+            document.getElementById('penaltyCount').textContent = `0 Kali`;
+            const btn = document.getElementById('gameTimerBtn');
+            btn.textContent = "Mulai";
+            btn.className = "px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg";
+        }
+
+        function updateGameTimerDisplay() {
+            const mins = Math.floor(gameTimeLeft / 60);
+            const secs = gameTimeLeft % 60;
+            document.getElementById('gameTimerDisplay').textContent = 
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function addPenalty() {
+            penaltyScore++;
+            gameTimeLeft += 5; // +5 second penalty
+            playAudioTone('beep');
+            document.getElementById('penaltyCount').textContent = `${penaltyScore} Kali (+${penaltyScore * 5}s)`;
+            updateGameTimerDisplay();
+        }
+
+        function renderMineGrid() {
+            const grid = document.getElementById('minefieldGrid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 24; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'h-10 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-center cursor-pointer hover:border-slate-600 transition-all text-xs font-bold';
+                cell.setAttribute('data-state', 'empty');
+                
+                cell.onclick = () => {
+                    const state = cell.getAttribute('data-state');
+                    if (state === 'empty') {
+                        cell.setAttribute('data-state', 'mine');
+                        cell.className = 'h-10 bg-red-600 text-white border border-red-500 rounded-lg flex items-center justify-center cursor-pointer transition-all text-xs font-bold';
+                        cell.innerHTML = '💣';
+                        playAudioTone('beep');
+                    } else if (state === 'mine') {
+                        cell.setAttribute('data-state', 'player');
+                        cell.className = 'h-10 bg-amber-500 text-slate-950 border border-amber-400 rounded-lg flex items-center justify-center cursor-pointer transition-all text-xs font-bold';
+                        cell.innerHTML = '👣';
+                    } else {
+                        cell.setAttribute('data-state', 'empty');
+                        cell.className = 'h-10 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-center cursor-pointer hover:border-slate-600 transition-all text-xs font-bold';
+                        cell.innerHTML = '';
+                    }
+                };
+                grid.appendChild(cell);
+            }
+        }
+
+        function resetMineGrid() {
+            renderMineGrid();
+        }
+
+        function triggerPledgeCelebration() {
+            playAudioTone('success');
+            
+            // Trigger Confetti
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 },
+                    colors: ['#dc2626', '#d97706', '#ffffff']
+                });
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTimelineNav();
+            renderEthicsScenario();
+            renderMineGrid();
+            updateMasterDisplay();
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
